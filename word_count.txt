@@ -1,0 +1,6 @@
+1) RUN NETCAT UTILITY
+	nc -L -p 9999
+2) OPEN THE LOCALHOST PORT AND START TYPING
+	nc localhost 9999
+	word count word count
+	

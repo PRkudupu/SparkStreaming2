@@ -1,0 +1,21 @@
+1) INSTALL SPARK
+	set home directory
+	set the path
+2) INSTALL KAFKA	
+	set home directory
+	set the path
+3) INSTALL TWEEPY
+	Open source library which allows to connect to Twitter APIs
+	Note: We need to install pip and set the path for pip
+		pip install tweepy
+4) INTALL PYKAFKA
+	python implementation for kafka
+		pip install pykafka
+5) INSTALL AFFINN
+	python library for sentiment analysis
+		pip install afinn
+6) INSTALL NETCAT
+	https://joncraton.org/blog/46/netcat-for-windows/
+	note:Download the secured one and set the path in the environment variable
+	nc -L -p 9999
+	allow the firewall to run
