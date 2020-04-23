@@ -52,7 +52,7 @@ if __name__ == "__main__":
 	
     # Create a trimmed version of the input dataframe with specific columns
     # We cannot sort a DataFrame unless aggregate is used, so no sorting here
-    trimmedDF = categoryDF.groupBy("borough")\
+    trimmedDF = categoryDF.groupBy("major_category")\
 							.agg({"value":"sum"})\
 							.withColumnRenamed("sum(value)","convictions")\
 		                 	.orderBy("convictions",ascending=False)
