@@ -18,7 +18,7 @@ I prefer fried fish over fried chicken
 spark-submit append.py
 spark-submit complete.py
 spark-submit aggregate.py
-spark-submit m02_demo04_sqlQuery.py
+spark-submit sqlQuery.py
 spark-submit m02_demo05_addTimestamp.py
 spark-submit m02_demo06_groupbyTimestamp.py
 spark-submit m02_demo07_window.py
