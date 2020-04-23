@@ -19,3 +19,11 @@
 	note:Download the secured one and set the path in the environment variable
 	nc -L -p 9999
 	allow the firewall to run
+7)  DOWNLOAD WINUTILS.EXE
+    Create a directory and name it as C:hadoop/bin/
+	copy the winutils.exe here
+	Evironment variable create HADOOP_HOME and point it to C:hadoop
+	Create the path to the bin directory.
+	hadoop/bin/
+8)  COPY winuuitls.exe to spark/bin folder
+    

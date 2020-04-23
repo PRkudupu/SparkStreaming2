@@ -6,5 +6,9 @@
 	word count word count
 3) CREATE A NEW STREAMING.PY file
     Here we would be using explode and split function
+	In this we would be using sparkSession , explode and split function.
+5) SUBMIT THE SPARK JOB 
+	//spark submit allows us to send the spark job to spark cluster
+	spark-submit streaming.py localhost 9999
 	
 	
