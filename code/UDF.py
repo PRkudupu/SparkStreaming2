@@ -1,3 +1,6 @@
+""" UDF FUNCTION IS CREATED
+	NEW COLUMN TIMESTAMP ADDED TO THE RESULT
+"""
 from pyspark.sql.types import *
 from pyspark.sql import SparkSession
 

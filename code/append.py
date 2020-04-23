@@ -1,3 +1,5 @@
+""" STREAMING DATA IN APPEND MODE
+"""
 from pyspark.sql.types import *
 from pyspark.sql import SparkSession
 

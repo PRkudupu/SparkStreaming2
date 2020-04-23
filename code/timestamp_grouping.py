@@ -1,9 +1,14 @@
-""" TEMPORARY VIEW ADDED 
-	SQL QUERY WRITTEN TO MANIPULATE THE DATA
+""" GROUPED BY TIMESTAMP
+    WE WOULD SPECIFY TRIGGER POLICY WHICH WOULD DETERMINE HOW OFTEN THE QUERY WOULD RUN
+	ALLOWS 2 FILES TO BE PROCESSED PER BATCH
+	PRINTED TO SCREEN EVERY 5 SECOND
 """
 from pyspark.sql.types import *
 from pyspark.sql import SparkSession
 
+from pyspark.sql.functions import udf
+import time
+import datetime
 
 if __name__ == "__main__":
 
@@ -40,44 +45,38 @@ if __name__ == "__main__":
 							   .option("maxFilePerTrigger",2)\
                                .schema(schema)\
                                .csv("../datasets/droplocation")
-	# Registering Table
-    # Create a view which can later be queried like a table
-    fileStreamDF.createOrReplaceTempView("LondonCrimeData")
-
-
-    # Using SQL query
-    # We use the LondonCrimeData view like a table
-    # We only select the crime category and numConvictions columns
-    # We narrow down the data to only include crimes committed in 2016
-    categoryDF = sparkSession.sql("SELECT major_category, value \
-                                    FROM LondonCrimeData \
-                                    WHERE year = '2016'")
+							   
+	# The User Defined Function (UDF)
+    # Create a timestamp from the current time and return it
+    def add_timestamp():
+         ts = time.time()
+         timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+         return timestamp
 	
-    # Create a trimmed version of the input dataframe with specific columns
-    # We cannot sort a DataFrame unless aggregate is used, so no sorting here
-    trimmedDF = categoryDF.groupBy("major_category")\
-							.agg({"value":"sum"})\
-							.withColumnRenamed("sum(value)","convictions")\
-		                 	.orderBy("convictions",ascending=False)
-
+	# Register the UDF
+    # Set the return type to be a String
+    # A name is assigned to the registered function 
+    add_timestamp_udf = udf(add_timestamp, StringType())
 	
-    # We run in append mode, so only new rows are processed,
-    # and existing rows in Result Table are not affected
-    # The output is written to the console
-    # We set truncate to false. If true, the output is truncated to 20 chars
-    # Explicity state number of rows to display. Default is 20
-    query = trimmedDF.writeStream\
-                      .outputMode("complete")\
-                      .format("console")\
-                      .option("truncate", "false")\
-                      .option("numRows", 30)\
-                      .start()\
-                      .awaitTermination()
+	# Create a new column called "timestamp" in fileStreamDF
+    # Apply the UDF to every row in fileStreamDF - assign its return value to timestamp column
+    fileStreamWithTS = fileStreamDF.withColumn("timestamp", add_timestamp_udf())
+	
+											 
+		
+    # We group by the timestamp value to get the number of convictions processed 
+    # for each timestamp 
+    convictionsPerTimestamp = fileStreamWithTS.groupBy("timestamp")\
+                                              .agg({"value": "sum"})\
+                                              .withColumnRenamed("sum(value)","convictions")\
+                                              .orderBy("convictions", ascending=False)
 
 
-
-
-
-
-
+    query = convictionsPerTimestamp.writeStream\
+                                  .outputMode("complete")\
+                                  .format("console")\
+                                  .option("truncate","false")\
+                                  .trigger(processingTime="5 seconds")\
+                                  .start()\
+                                  .awaitTermination()
 
