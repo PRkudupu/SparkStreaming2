@@ -33,43 +33,25 @@ if __name__ == "__main__":
     # We state the schema to use and the location of the csv files
     fileStreamDF = sparkSession.readStream\
                                .option("header", "true")\
+							   .option("maxFilePerTrigger",1)\
                                .schema(schema)\
                                .csv("../datasets/droplocation")
 
 
-    # Check whether input data is streaming or not
-    print(" ")
-    print("Is the stream ready?")
-    print(fileStreamDF.isStreaming)
-
-
-    # Print Schema
-    print(" ")
-    print("Schema of the input stream: ")
-    print(fileStreamDF.printSchema)
-
-
     # Create a trimmed version of the input dataframe with specific columns
     # We cannot sort a DataFrame unless aggregate is used, so no sorting here
-    trimmedDF = fileStreamDF.select(
-                                      fileStreamDF.borough,
-                                      fileStreamDF.year,
-                                      fileStreamDF.month,
-                                      fileStreamDF.value
-                                      )\
-                             .withColumnRenamed(
-                                      "value",
-                                      "convictions"
-                                      )
+    trimmedDF = fileStreamDF.groupBy("borough")\
+		                    .count()\
+							.orderBy("count",ascending=False)
 
-
+	
     # We run in append mode, so only new rows are processed,
     # and existing rows in Result Table are not affected
     # The output is written to the console
     # We set truncate to false. If true, the output is truncated to 20 chars
     # Explicity state number of rows to display. Default is 20
     query = trimmedDF.writeStream\
-                      .outputMode("append")\
+                      .outputMode("complete")\
                       .format("console")\
                       .option("truncate", "false")\
                       .option("numRows", 30)\

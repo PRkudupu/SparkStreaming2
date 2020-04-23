@@ -1,0 +1,8 @@
+THIS PROJECT HAS SMALL CODE SNIPPETS FOR STRUCTURED STREAMING
+FOLDERS
+	There are 2 folders 
+	CODE :It contains the code snippets
+	DATASETS: It has the datasets for the crimes in newyork city
+	DROPLOCATION:  This folder is where any files dropped here would be read by the spark streaming jobs
+	
+	
