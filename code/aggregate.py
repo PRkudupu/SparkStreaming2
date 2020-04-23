@@ -31,6 +31,7 @@ if __name__ == "__main__":
     # Read stream into a dataframe
     # Since the csv data includes a header row, we specify that here
     # We state the schema to use and the location of the csv files
+	# maxFilesPerTrigger sets the number of new files to be considered in each trigger
     fileStreamDF = sparkSession.readStream\
                                .option("header", "true")\
 							   .option("maxFilePerTrigger",2)\
@@ -38,22 +39,15 @@ if __name__ == "__main__":
                                .csv("../datasets/droplocation")
 
 
-    # Use groupBy and agg functions to get total convictions per borough
-    # The new column created will be called sum(value) - rename to something meaningfull
-    # Order by number of convictions in descending order
+    # Create a trimmed version of the input dataframe with specific columns
+    # We cannot sort a DataFrame unless aggregate is used, so no sorting here
     trimmedDF = fileStreamDF.groupBy("borough")\
-							.agg("value":"sum")\
+							.agg({"value":"sum"})\
 							.withColumnRenamed("sum(value)","convictions")\
-		                    .orderBy("count",ascending=False)
+		                 	.orderBy("convictions",ascending=False)
 
 	
-    ##### Multiple Streaming aggregation is not supported   #### 
-    # i.e. We already have performed an aggregation to get borough_convictions
-    # A further aggregation such as the one below is not permitted 
-    # data = borough_convictions.agg({"convictions":"sum"})
-	
-	
-    # We run in complete mode, so only new rows are processed,
+    # We run in append mode, so only new rows are processed,
     # and existing rows in Result Table are not affected
     # The output is written to the console
     # We set truncate to false. If true, the output is truncated to 20 chars
