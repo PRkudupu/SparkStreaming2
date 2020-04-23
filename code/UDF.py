@@ -63,21 +63,11 @@ if __name__ == "__main__":
     fileStreamDF.createOrReplaceTempView("LondonCrimeData")
 
 
-    # Using SQL query
-    # We use the LondonCrimeData view like a table
-    # We only select the crime category and numConvictions columns
-    # We narrow down the data to only include crimes committed in 2016
-    categoryDF = sparkSession.sql("SELECT major_category, value \
-                                    FROM LondonCrimeData \
-                                    WHERE year = '2016'")
-	
-    # Create a trimmed version of the input dataframe with specific columns
-    # We cannot sort a DataFrame unless aggregate is used, so no sorting here
-    trimmedDF = categoryDF.groupBy("major_category")\
-							.agg({"value":"sum"})\
-							.withColumnRenamed("sum(value)","convictions")\
-		                 	.orderBy("convictions",ascending=False)
-
+     # Select 4 columns from the dataframe
+    trimmedDF = fileStreamWithTS.select("borough",
+                                        "major_category",
+                                        'value',
+                                        "timestamp")
 	
     # We run in append mode, so only new rows are processed,
     # and existing rows in Result Table are not affected
@@ -85,13 +75,11 @@ if __name__ == "__main__":
     # We set truncate to false. If true, the output is truncated to 20 chars
     # Explicity state number of rows to display. Default is 20
     query = trimmedDF.writeStream\
-                      .outputMode("complete")\
-                      .format("console")\
-                      .option("truncate", "false")\
-                      .option("numRows", 30)\
-                      .start()\
-                      .awaitTermination()
-
+                        .outputMode('append')\
+                        .format('console')\
+                        .option("truncate","false")\
+                        .start()\
+                        .awaitTermination()
 
 
 
