@@ -10,6 +10,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import udf
 import time
 import datetime
+from pyspark.sql.functions import window
 
 if __name__ == "__main__":
 
@@ -82,13 +83,13 @@ if __name__ == "__main__":
                                               .orderBy("convictions", ascending=False)
 
 	# Write output to the console
-    query = convictionsPerTimestamp.writeStream\
-                                  .outputMode("complete")\
-                                  .format("console")\
-                                  .option("truncate","false")\
-                                  .trigger(processingTime="5 seconds")\
-                                  .start()\
-                                  .awaitTermination()
+    query = window.writeStream\
+				  .outputMode("complete")\
+				  .format("console")\
+				  .option("truncate","false")\
+				  .trigger(processingTime="5 seconds")\
+				  .start()\
+				  .awaitTermination()
 
 
 
