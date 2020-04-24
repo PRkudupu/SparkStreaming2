@@ -1,7 +1,8 @@
 """ GROUPED BY TIMESTAMP
-    WE WOULD SPECIFY TRIGGER POLICY WHICH WOULD DETERMINE HOW OFTEN THE QUERY WOULD RUN
-	ALLOWS 2 FILES TO BE PROCESSED PER BATCH
-	PRINTED TO SCREEN EVERY 5 SECOND
+    WE WOULD SPECIFY SLIDING WINDOW TIME AND BATCH INTERVAL
+	window(fileStreamWithTS.timestamp, 
+	"30 seconds", 
+	"18 seconds")
 """
 from pyspark.sql.types import *
 from pyspark.sql import SparkSession
@@ -66,14 +67,21 @@ if __name__ == "__main__":
     fileStreamWithTS = fileStreamDF.withColumn("timestamp", add_timestamp_udf())
 
 
-    # We group by the timestamp value to get the number of convictions processed 
-    # for each timestamp 
-    convictionsPerTimestamp = fileStreamWithTS.groupBy("timestamp")\
+    # window(timeColumn, windowDuration, slideDuration=None, startTime=None)
+    # timeColumn gives the time field to use when creating a window
+    # windowDuration gives the length of the window
+    # slideDuration is the gap between each window (Windows can overlap)
+    # slideDuration must be <= windowDuration
+    # The #convictions for a particular window will likely increase with each batch of files processed - 
+    # this is because more timestamps within that window will be encountered in the new batch
+    window = fileStreamWithTS.groupBy(window(fileStreamWithTS.timestamp, 
+                                                "30 seconds", 
+                                                "18 seconds"))\
                                               .agg({"value": "sum"})\
                                               .withColumnRenamed("sum(value)","convictions")\
                                               .orderBy("convictions", ascending=False)
 
-
+	# Write output to the console
     query = convictionsPerTimestamp.writeStream\
                                   .outputMode("complete")\
                                   .format("console")\

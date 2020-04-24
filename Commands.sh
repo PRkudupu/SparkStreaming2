@@ -20,7 +20,7 @@ spark-submit complete.py
 spark-submit aggregate.py
 spark-submit sqlQuery.py
 spark-submit UDF.py
-spark-submit m02_demo06_groupbyTimestamp.py
+spark-submit timestamp_grouping.py
 spark-submit m02_demo07_window.py
 spark-submit m03_demo02_countHashtags.py
 spark-submit m03_demo03_countHashtagsWindow.py 
