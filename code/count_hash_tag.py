@@ -7,11 +7,15 @@ from pyspark.sql.types import *
 
 if __name__ == "__main__":
 
-    
+    if len(sys.argv) != 3:
+        print("Usage: spark-submit m02_demo09_countHashtags.py <hostname> <port>", 
+                file=sys.stderr)
+        exit(-1)
+
     host = sys.argv[1]
     port = int(sys.argv[2])
-    
-	spark = SparkSession\
+
+    spark = SparkSession\
         .builder\
         .appName("HashtagCount")\
         .getOrCreate()
