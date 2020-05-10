@@ -1,34 +1,34 @@
 import sys
-import socket
-import json
 import tweepy
 from tweepy import OAuthHandler
 from tweepy import Stream
 from tweepy.streaming import StreamListener
+import json
+import pykafka
 
 class TweetsListener(StreamListener):
 
-    def __init__(self, socket):
-
-        print ("Tweets listener initialized")
-        self.client_socket = socket
-
+    def __init__(self, kafkaProducer):
+        print ("Tweets producer initialized")
+        self.producer = kafkaProducer
     def on_data(self, data):
-
         try:
-            jsonMessage = json.loads(data)
-            message = jsonMessage["text"].encode("utf-8")
-            print (message)
-            self.client_socket.send(message)
+            json_data = json.loads(data)
+            words = json_data["text"].split()
+            hashtagList = list(filter(lambda x: x.lower().startswith("#"), words))
+        
+            if(len(hashtagList)!=0):
+                for hashtag in hashtagList:
+                    print(hashtag)   
+                    self.producer.produce(bytes(hashtag,"utf-8"))
 
-        except BaseException as e:
+        except KeyError as e:
             print("Error on_data: %s" % str(e))
 
         return True
 
     def on_error(self, status):
-
-        print (status)
+        print(status)
         return True
 
 def connect_to_twitter(connection, tracks):
@@ -38,37 +38,37 @@ def connect_to_twitter(connection, tracks):
 
     access_token = "4317207928-9LYbCyI0EhG9GxkFTMxBvXqqElWJMvqI4d3Ktr1"
     access_token_secret = "DxY9jKd20iAWTvzU8gWhV4Gi9jpWH2L4KjcqiGXb2zNRY"
-
+    
+    #OAuthHandler
     auth = OAuthHandler(api_key, api_secret)
     auth.set_access_token(access_token, access_token_secret)
 
-    twitter_stream = Stream(auth, TweetsListener(connection))
+    # Takes kafka producer as argument as it would send these tweets to kafka
+    twitter_stream = Stream(auth, TweetsListener(kafkaProducer))
     twitter_stream.filter(track=tracks, languages=["en"])
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 4:
-        print("Usage: python m02_demo08_twitterStreaming.py <hostname> <port> <tracks>", 
+    if len(sys.argv) < 5:
+        print("Usage: python m03_demo02_kafkaHashtagProducer.py <host> <port> <topic_name> <tracks>", 
                 file=sys.stderr)
         exit(-1)
 
     host = sys.argv[1]
-    port = int(sys.argv[2])
-    tracks = sys.argv[3:]
+    port = sys.argv[2]
+    topic = sys.argv[3]
+    tracks = sys.argv[4:]
 
-    s = socket.socket()
-    s.bind((host, port))
+    #initialize kafka client
+    kafkaClient = pykafka.KafkaClient(host + ":" + port)
 
-    print("Listening on port: %s" % str(port))
+    # pass topic as comman line argument
+    kafkaProducer = kafkaClient.topics[bytes(topic,"utf-8")].get_producer()
 
-    s.listen(5)
+    # Connect to twitter
+    connect_to_twitter(kafkaProducer, tracks)
 
-    connection, client_address = s.accept()
 
-    print( "Received request from: " + str(client_address))
-    print("Initializing listener for these tracks: ", tracks)
-
-    connect_to_twitter(connection, tracks)
 
 
 
