@@ -1,12 +1,8 @@
-""" UDF FUNCTION IS CREATED
-	NEW COLUMN TIMESTAMP ADDED TO THE RESULT
+""" STREAMING DATA IN APPEND MODE
 """
 from pyspark.sql.types import *
 from pyspark.sql import SparkSession
 
-from pyspark.sql.functions import udf
-import time
-import datetime
 
 if __name__ == "__main__":
 
@@ -37,44 +33,53 @@ if __name__ == "__main__":
     # Read stream into a dataframe
     # Since the csv data includes a header row, we specify that here
     # We state the schema to use and the location of the csv files
-	# maxFilesPerTrigger sets the number of new files to be considered in each trigger
     fileStreamDF = sparkSession.readStream\
                                .option("header", "true")\
-							   .option("maxFilePerTrigger",2)\
                                .schema(schema)\
                                .csv("../datasets/droplocation")
-							   
-	# The User Defined Function (UDF)
-    # Create a timestamp from the current time and return it
-    def add_timestamp():
-         ts = time.time()
-         timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-         return timestamp
-	
-	# Register the UDF
-    # Set the return type to be a String
-    # A name is assigned to the registered function 
-    add_timestamp_udf = udf(add_timestamp, StringType())
-	
-	# Create a new column called "timestamp" in fileStreamDF
-    # Apply the UDF to every row in fileStreamDF - assign its return value to timestamp column
-    fileStreamWithTS = fileStreamDF.withColumn("timestamp", add_timestamp_udf())
-
-	
-	# Select 4 columns from the dataframe
-    trimmedDF = fileStreamWithTS.select("borough",
-                                        "major_category",
-                                        'value',
-                                        "timestamp")
 
 
-    # Write the trimmed DF to console
+    # Check whether input data is streaming or not
+    print(" ")
+    print("Is the stream ready?")
+    print(fileStreamDF.isStreaming)
+
+
+    # Print Schema
+    print(" ")
+    print("Schema of the input stream: ")
+    print(fileStreamDF.printSchema)
+
+
+    # Create a trimmed version of the input dataframe with specific columns
+    # We cannot sort a DataFrame unless aggregate is used, so no sorting here
+    trimmedDF = fileStreamDF.select(
+                                      fileStreamDF.borough,
+                                      fileStreamDF.year,
+                                      fileStreamDF.month,
+                                      fileStreamDF.value
+                                      )\
+                             .withColumnRenamed(
+                                      "value",
+                                      "convictions"
+                                      )
+
+	
+    # We run in append mode, so only new rows are processed,
+    # and existing rows in Result Table are not affected
+    # The output is written to the console
+    # We set truncate to false. If true, the output is truncated to 20 chars
+    # Explicity state number of rows to display. Default is 20
     query = trimmedDF.writeStream\
-                        .outputMode('append')\
-                        .format('console')\
-                        .option("truncate","false")\
-                        .start()\
-                        .awaitTermination()
+                      .outputMode("append")\
+                      .format("console")\
+                      .option("truncate", "false")\
+                      .option("numRows", 30)\
+                      .start()\
+                      .awaitTermination()
+
+
+
 
 
 

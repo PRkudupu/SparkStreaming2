@@ -21,25 +21,12 @@ if __name__ == "__main__":
     # InferSchema not yet available in spark structured streaming 
     # (it is available in static dataframes)
     # We explicity state the schema of the input data
-    schema = StructType([StructField("lsoa_code", StringType(), True),\
-                         StructField("borough", StringType(), True),\
-                         StructField("major_category", StringType(), True),\
-                         StructField("minor_category", StringType(), True),\
-                         StructField("value", StringType(), True),\
-                         StructField("year", StringType(), True),\
-                         StructField("month", StringType(), True)])
-
+   
     
     # Read stream into a dataframe
     # Since the csv data includes a header row, we specify that here
     # We state the schema to use and the location of the csv files
-    fileStreamDF = sparkSession.readStream\
-                               .option("header", "true")\
-							   .option("maxFilePerTrigger",1)\
-                               .schema(schema)\
-                               .csv("../datasets/droplocation")
-
-
+    
     # Use groupBy and agg functions to get total convictions per borough
     # The new column created will be called sum(value) - rename to something meaningfull
     # Order by number of convictions in descending order
@@ -48,12 +35,7 @@ if __name__ == "__main__":
                                 .orderBy("count", ascending=False)
 
 	
-    ##### Multiple Streaming aggregation is not supported   #### 
-    # i.e. We already have performed an aggregation to get borough_convictions
-    # A further aggregation such as the one below is not permitted 
-    # data = borough_convictions.agg({"convictions":"sum"})
-	
-	
+    
     # We run in complete mode, so only new rows are processed,
     # and existing rows in Result Table are not affected
     # The output is written to the console

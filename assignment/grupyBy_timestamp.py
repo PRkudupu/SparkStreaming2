@@ -25,25 +25,12 @@ if __name__ == "__main__":
     # InferSchema not yet available in spark structured streaming 
     # (it is available in static dataframes)
     # We explicity state the schema of the input data
-    schema = StructType([StructField("lsoa_code", StringType(), True),\
-                         StructField("borough", StringType(), True),\
-                         StructField("major_category", StringType(), True),\
-                         StructField("minor_category", StringType(), True),\
-                         StructField("value", StringType(), True),\
-                         StructField("year", StringType(), True),\
-                         StructField("month", StringType(), True)])
-
     
     # Read stream into a dataframe
     # Since the csv data includes a header row, we specify that here
     # We state the schema to use and the location of the csv files
 	# maxFilesPerTrigger sets the number of new files to be considered in each trigger
-    fileStreamDF = sparkSession.readStream\
-                               .option("header", "true")\
-							   .option("maxFilePerTrigger",2)\
-                               .schema(schema)\
-                               .csv("../datasets/droplocation")
-							   
+   							   
 	# The User Defined Function (UDF)
     # Create a timestamp from the current time and return it
     def add_timestamp():
@@ -62,11 +49,7 @@ if __name__ == "__main__":
 
 	
 	# Select 4 columns from the dataframe
-    trimmedDF = fileStreamWithTS.select("borough",
-                                        "major_category",
-                                        'value',
-                                        "timestamp")
-
+    
 
     # Write the trimmed DF to console
     query = trimmedDF.writeStream\

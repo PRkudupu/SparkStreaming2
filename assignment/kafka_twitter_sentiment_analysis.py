@@ -12,18 +12,7 @@ class TweetsListener(StreamListener):
         print ("Sentiment analysis")
         self.producer = kafkaProducer
     def on_data(self, data):
-        try:
-            json_data = json.loads(data)
-            tweet = json_data["text"]
-            print(tweet +"\n")   
-            #1. Send the tweet to kafka producer
-            #2. Convert the tweet to json
-            self.producer.produce(bytes(json.dumps(tweet),"ascii"))
-
-        except KeyError as e:
-            print("Error on_data: %s" % str(e))
-
-        return True
+        
 
     def on_error(self, status):
         print(status)
@@ -31,11 +20,7 @@ class TweetsListener(StreamListener):
 
 def connect_to_twitter(connection, tracks):
 
-    api_key = "AyRj5WdMHlWL40n2yblHcTt4w"
-    api_secret = "DdX3O6SrBYU9reYNzCeEcy9RIepFZYZWZzRLOpFSRUjlrIxNfT"
-
-    access_token = "4317207928-9LYbCyI0EhG9GxkFTMxBvXqqElWJMvqI4d3Ktr1"
-    access_token_secret = "DxY9jKd20iAWTvzU8gWhV4Gi9jpWH2L4KjcqiGXb2zNRY"
+    
     
     #OAuthHandler
     auth = OAuthHandler(api_key, api_secret)
@@ -52,10 +37,7 @@ if __name__ == "__main__":
                 file=sys.stderr)
         exit(-1)
 
-    host = sys.argv[1]
-    port = sys.argv[2]
-    topic = sys.argv[3]
-    tracks = sys.argv[4:]
+    
 
     #initialize kafka client
     kafkaClient = pykafka.KafkaClient(host + ":" + port)

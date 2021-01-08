@@ -23,27 +23,11 @@ if __name__ == "__main__":
     spark.sparkContext.setLogLevel("ERROR")
 
     #Read streaming data from the socket by specifying the host name ans port
-    lines = spark\
-        .readStream\
-        .format("socket")\
-        .option("host", host)\
-        .option("port", port)\
-        .load()
-	
+   
 	#split based on space 
-    words = lines.select(
-        explode(
-            split(lines.value, " ")
-        ).alias("word")
-    )
+    
     #UDF. This function finds the word which starts with #
-    def extract_tags(word):
-        if word.lower().startswith("#"):
-            return word
-        else:
-            return "nonTag"
-
-    extract_tags_udf = udf(extract_tags, StringType())
+ 
 	#Add new column tags w
     resultDF = words.withColumn("tags", extract_tags_udf(words.word))
 

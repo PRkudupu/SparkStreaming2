@@ -3,6 +3,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import explode
 from pyspark.sql.functions import split
 from pyspark.sql.functions import udf
+from pyspark.sql.functions import window
 from pyspark.sql.types import *
 
 if __name__ == "__main__":
@@ -22,38 +23,29 @@ if __name__ == "__main__":
 
     spark.sparkContext.setLogLevel("ERROR")
 
-    #Read streaming data from the socket by specifying the host name ans port
-    lines = spark\
-        .readStream\
-        .format("socket")\
-        .option("host", host)\
-        .option("port", port)\
-        .load()
-	
+    #Read the stream by specifying the host name ans port
+    #Include timestammp.We use the twitter event stamp 
+   
 	#split based on space 
     words = lines.select(
         explode(
-            split(lines.value, " ")
-        ).alias("word")
+            split(lines.value, " "))\
+        .alias("word"),
+        lines.timestamp
     )
     #UDF. This function finds the word which starts with #
-    def extract_tags(word):
-        if word.lower().startswith("#"):
-            return word
-        else:
-            return "nonTag"
-
-    extract_tags_udf = udf(extract_tags, StringType())
+  
 	#Add new column tags w
     resultDF = words.withColumn("tags", extract_tags_udf(words.word))
 
     """Filter non tagGroup 
-    group by tag and do a count on tags """
-    hashtagCounts = resultDF.where(resultDF.tags != "nonTag")\
-                          .groupBy("tags")\
-                          .count()\
-                          .orderBy("count", ascending=False)
-
+       group by window  
+       Window size 50 seconds 
+       sliding interval is 30 seconds
+       Within the window group by tag.
+       Count the frequency of tag
+       Oder in descending order."""
+    
     query = hashtagCounts.writeStream\
                       .outputMode("complete")\
                       .format("console")\

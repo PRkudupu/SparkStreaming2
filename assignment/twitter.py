@@ -47,26 +47,7 @@ def connect_to_twitter(connection, tracks):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 4:
-        print("Usage: python twitterStreaming.py <hostname> <port> <tracks>", 
-                file=sys.stderr)
-        exit(-1)
-
-    host = sys.argv[1]
-    port = int(sys.argv[2])
-    tracks = sys.argv[3:]
-
-    s = socket.socket()
-    s.bind((host, port))
-
-    print("Listening on port: %s" % str(port))
-
-    s.listen(5)
-
-    connection, client_address = s.accept()
-
-    print( "Received request from: " + str(client_address))
-    print("Initializing listener for these tracks: ", tracks)
+    
 
     connect_to_twitter(connection, tracks)
 
