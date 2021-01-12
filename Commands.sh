@@ -52,7 +52,7 @@ cd C:\kafka\kafka_2.13-2.5.0\
 cd C:\kafka\kafka_2.13-2.5.0\bin\windows
 
 3) Create Kafka Topics
-# CEATE A KAFKA TOPIC called first_kafka_topic
+# CREATE A KAFKA TOPIC called first_kafka_topic
 kafka-topics.bat --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic first_kafka_topic
 
 4) list Topics
@@ -78,5 +78,57 @@ python kafka_twitter_sentiment_analysis.py localhost 9092 first_kafka_topic "nba
 
 # Run Kafka Consumer
 spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.4 kafka_sentiment_analysis_streaming.py localhost 9092 first_kafka_topic
+
+#Describe kafka topics
+kafka-topics.bat --describe --topic first_kafka_topic --zookeeper localhost:2181
+
+##LAB 2
+cd C:\kafka\kafka_2.13-2.5.0\
+
+1) Run zookeeper
+.\bin\windows\Zookeeper-server-start.bat .\config\zookeeper.properties
+
+2) Run Kafka Broker
+  .\bin\windows\kafka-server-start.bat .\config\server.properties
+
+cd C:\kafka\kafka_2.13-2.5.0\bin\windows
+
+# START 3 BROKERS
+3)
+.\bin\windows\kafka-server-start.bat .\config\server-01.properties
+
+.\bin\windows\kafka-server-start.bat .\config\server-02.properties
+
+.\bin\windows\kafka-server-start.bat .\config\server-03.properties
+
+# CREATE TOPIC WITH REPLICATION FACTOR AS 3
+
+4) 
+kafka-topics.bat --create --zookeeper localhost:2181 --replication-factor 3 --partitions 1 --topic replicated_3_topic
+
+#look for the topic
+5) 
+kafka-topics.bat --describe --topic replicated_3_topic --zookeeper localhost:2181
+
+#CREATE A PRODUCER
+6)
+kafka-console-producer.bat --broker-list localhost:9092 --topic replicated_3_topic
+
+#CREATE A CONSUMER
+7)
+kafka-console-consumer.bat --bootstrap-server localhost:9092 --topic replicated_3_topic --from-beginning
+
+## LAB 3
+# CHANGE DIRECTORY
+cd C:\kafka\kafka_2.13-2.5.0\
+# RUN ZOOKEEPER
+1) Run zookeeper
+.\bin\windows\Zookeeper-server-start.bat .\config\zookeeper.properties
+
+# RUN KAFKA BROKER
+2) Run Kafka Broker
+  .\bin\windows\kafka-server-start.bat .\config\server.properties
+#CHANGE DIRECTORY
+cd C:\kafka\kafka_2.13-2.5.0\bin\windows
 
 
